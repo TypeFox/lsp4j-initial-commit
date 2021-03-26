@@ -3636,7 +3636,7 @@ class FormattingOptions extends LinkedHashMap<String, Either3<String, Number, Bo
 	 */
 	@Deprecated
 	def Map<String, String> getProperties() {
-		val properties = newLinkedHashMap
+		val properties = new LinkedHashMap<String,String>
 		for (entry : entrySet) {
 			val value = switch it: entry.value {
 				case isFirst: getFirst

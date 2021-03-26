@@ -11,6 +11,8 @@
  ******************************************************************************/
 package org.eclipse.lsp4j.generator
 
+import com.google.common.base.MoreObjects
+import com.google.gson.annotations.JsonAdapter
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull
 import org.eclipse.xtend.lib.annotations.AccessorsProcessor
 import org.eclipse.xtend.lib.annotations.EqualsHashCodeProcessor
@@ -22,8 +24,6 @@ import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.Type
 import org.eclipse.xtend.lib.macro.declaration.Visibility
-import org.eclipse.xtext.xbase.lib.util.ToStringBuilder
-import com.google.gson.annotations.JsonAdapter
 
 class JsonRpcDataProcessor extends AbstractClassProcessor {
 
@@ -44,7 +44,12 @@ class JsonRpcDataProcessor extends AbstractClassProcessor {
 		val fields = impl.declaredFields.filter[!static]
 		equalsHashCodeUtil.addEquals(impl, fields, shouldIncludeSuper)
 		equalsHashCodeUtil.addHashCode(impl, fields, shouldIncludeSuper)
-
+		impl.getDeclaredMethods.forEach [ method | 
+			val purified = method.findAnnotation(Pure.findTypeGlobally)
+			if (purified !== null) {
+				method.removeAnnotation(purified)
+			}
+		]
 		return impl
 	}
 
@@ -154,10 +159,9 @@ class JsonRpcDataProcessor extends AbstractClassProcessor {
 		impl.addMethod("toString") [
 			returnType = string
 			addAnnotation(newAnnotationReference(Override))
-			addAnnotation(newAnnotationReference(Pure))
 			val accessorsUtil = new AccessorsProcessor.Util(context)
 			body = '''
-				«ToStringBuilder» b = new «ToStringBuilder»(this);
+				«MoreObjects.ToStringHelper» b = «MoreObjects».toStringHelper(this);
 				«FOR field : toStringFields»
 					b.add("«field.simpleName»", «IF field.declaringType == impl»this.«field.simpleName»«ELSE»«
 						accessorsUtil.getGetterName(field)»()«ENDIF»);
