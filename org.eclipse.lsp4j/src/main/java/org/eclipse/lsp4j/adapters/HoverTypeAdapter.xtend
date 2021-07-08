@@ -24,6 +24,7 @@ import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.generator.TypeAdapterImpl
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import java.util.ArrayList
 
 /**
  * A type adapter for the Hover protocol type.
@@ -37,7 +38,8 @@ class HoverTypeAdapter {
 	protected def readContents(JsonReader in) throws IOException {
 		val nextToken = in.peek()
 		if (nextToken == JsonToken.STRING) {
-			val List<Either<String, MarkedString>> value = newArrayList(Either.forLeft(in.nextString))
+			val List<Either<String, MarkedString>> value = new ArrayList<Either<String, MarkedString>>()
+			value.add(Either.forLeft(in.nextString))
 			return Either.forLeft(value)
 		} else if (nextToken == JsonToken.BEGIN_ARRAY) {
 			val value = gson.fromJson(in, LIST_STRING_MARKEDSTRING.type)
@@ -45,7 +47,8 @@ class HoverTypeAdapter {
 		} else {
 			val object = JsonParser.parseReader(in) as JsonObject
 			if (object.has("language")) {
-				val List<Either<String, MarkedString>> value = newArrayList(Either.forRight(gson.fromJson(object, MarkedString)))
+				val List<Either<String, MarkedString>> value = new ArrayList<Either<String, MarkedString>>()
+				value.add(Either.forRight(gson.fromJson(object, MarkedString)))
 				return Either.forLeft(value)
 			} else {
 				return Either.forRight(gson.fromJson(object, MarkupContent))
